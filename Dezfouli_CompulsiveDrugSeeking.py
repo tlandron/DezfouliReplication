@@ -37,7 +37,7 @@ epsi = 0.1
 k = 7#ts
 
 
-'''Definition of Rbarvalues'''
+'''Definition of Rbar values'''
 
 rndGenerator = np.random.RandomState(5)
 # R_ : float
@@ -67,6 +67,13 @@ S = {
 	's_1' : [{'' : (R_c, 's_0')}]
 	}
 
+#To make it learn the reward value (trial 1)
+'''
+S = {
+	's_0' : [{'PL' : (R_c, 's_0')}]
+	}
+'''
+
 # list[str] : list of the state really taken
 s_t = ['s_0'] + [None] * t
 
@@ -81,8 +88,8 @@ delta_c = [None] * (t + 1)
 Q = dict()
 for s, list_action in S.items():
 	for action in list_action: ###action = dict()
-		r_action, next_s = action.values()[0]
-		Q[(s, action.keys()[0])] = [r_action] + [None]*t
+		[(name_action, (r_action, next_s))] = action.items()
+		Q[(s, name_action)] = [r_action] + [None]*t
 print('Q=', Q)
 
 # V : list[number] value of state s at time t+1
@@ -90,8 +97,8 @@ SubV = list()
 for s, list_action in S.items():
 	if s == 's_0':
 		for action in list_action:
-			r_action, next_s = action.values()[0]
-			SubV.append(Q[s, action.keys()[0]][0])
+			[(name_action, (r_action, next_s))] = action.items()
+			SubV.append(Q[s, name_action][0])
 V = [max(SubV)] + [None] * t
 
 # rho : list[number]
@@ -120,96 +127,104 @@ for i in range(0, t):
 
 	if s_t[i] == 's_0':		###epsilon-greedy action selection policy
 
+		# temp : float, is part of the epsilon-greedy action selectione (temps = the value that epsilon is compared to)
 		temp = random.random()
 
 		if temp > epsi: #choose the action with the highest estimated value (non-exploratory action)
 
+			# non-explo : bool, enables to tell if Rbar has to be updated (only in non-exploratory action)
 			non_explo = True
+
+			# temp_dict : dict(), stores the action subdictionaries of the current states for computation a the maximun state-action value
 			temp_dict = dict()
 
 
 			for s, list_action in S.items():
 				if s == s_t[i]:
 					for action in list_action:
-						r_action, next_s = action.values()[0]
-						temp_dict[action.keys()[0]] = Q[s_t[i], action.keys()[0]][i]
+						[(name_action, (r_action, next_s))] = action.items()
+						temp_dict[name_action] = Q[(s_t[i], name_action)][i]
 
 
-			temp_action = max(temp_dict, key = temp_dict.get)
+			temp_action = max(temp_dict, key = temp_dict.get) # return the name of the action with the maximun state-action value
 
 
 			for s, list_action in S.items():
 				if s == s_t[i]:
 					for action in list_action:
-						r_action, next_s = action.values()[0]
-						if action.keys()[0] == temp_action:
+						[(name_action, (r_action, next_s))] = action.items()
+						if name_action == temp_action:
 							r[i] = r_action
 							s_t[i + 1] = next_s
 
 							S_ge = s
-							A_ge = action.keys()[0]
+							A_ge = name_action
 
 
-						if not action.keys()[0] == temp_action:
-							Q[(s, action.keys()[0])][i + 1] = Q[(s, action.keys()[0])][i]
+						if not name_action == temp_action: #assigns the i + 1 value of the other actions within the same state ('same-state, other-actions' value)
+							Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]
 
 
-				if not s == s_t[i]:
+				if not s == s_t[i]: #assigns the i + 1 value of the other actions of the other states ('other-state, other-actions' value)
 					for action in list_action:
-						Q[(s, action.keys()[0])][i + 1] = Q[(s, action.keys()[0])][i]
+						[(name_action, (r_action, next_s))] = action.items()
+						Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]
 
 
 		else: #choose the action randomly (exploratory action)
 
-			non_explo = False
+			non_explo = False #(exploratory action)
 
 			for s, list_action in S.items():
 				if s == s_t[i]:
 					chosen_action = random.choice(list_action)
-					r_action, next_s = chosen_action.values()[0]
+					[(name_action, (r_action, next_s))] = chosen_action.items()
 
 					r[i] = r_action
 					s_t[i + 1] = next_s
 
 					S_ge = s
-					A_ge = chosen_action.keys()[0]
+					A_ge = name_action
 
 
 					for action in list_action:
 						if not action == chosen_action:
-							Q[(s, action.keys()[0])][i + 1] = Q[(s, action.keys()[0])][i]
+							[(name_action, (r_action, next_s))] = action.items()
+							Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]
 
 				if not s == s_t[i]:
 					for action in list_action:
-						Q[(s, action.keys()[0])][i + 1] = Q[(s, action.keys()[0])][i]
+						[(name_action, (r_action, next_s))] = action.items()
+						Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]
+
 
 
 	else: # s_t[i] == 's_1'
 		for s, list_action in S.items():
 			if s == s_t[i]:
 				for action in list_action:
-					r_action, next_s = action.values()[0]
+					[(name_action, (r_action, next_s))] = action.items()
 
 					r[i] = r_action
 					s_t[i + 1] = next_s
 
 					S_ge = s
-					A_ge = action.keys()[0]
+					A_ge = name_action
 
 
 			if not s == s_t[i]:
 				for action in list_action:
-					Q[(s, action.keys()[0])][i + 1] = Q[(s, action.keys()[0])][i]
+					[(name_action, (r_action, next_s))] = action.items()
+					Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]
+
 
 	#Updating V
 	SubV = list()
 	for s, list_action in S.items():
 		if s == s_t[i]:
 			for action in list_action:
-				r_action, next_s = action.values()[0]
-
-				SubV.append(Q[s, action.keys()[0]][i])
-
+				[(name_action, (r_action, next_s))] = action.items()
+				SubV.append(Q[(s, name_action)][i])
 	V[i] = max(SubV)
 
 	###change action.values()[0] with name_action, r_action, next_s = action.items()
@@ -244,7 +259,8 @@ print('r[i] =', r[i], 'Ds =', Ds, 'kappa[i] =', kappa[i], 'Rbar[i] =', Rbar[i], 
 
 for s, list_action in S.items():
 	for action in list_action:
-		print ('Q[', s, action.keys()[0],'] = ', Q[s, action.keys()[0]])
+		[(name_action, (r_action, next_s))] = action.items()
+		print ('Q[', s, name_action,'] = ', Q[(s, name_action)])
 
 '''Graphs'''
 
@@ -253,17 +269,13 @@ ax = list()
 color = ['r-', 'k-', 'b-', 'g-']
 for s, list_action in S.items():
 	for action in list_action:
-		plt.plot(range(0, t+1), Q[s, action.keys()[0]], color[p])
-		print('Graphs:', (s, action.keys()[0],'is in', color[p]))
+		[(name_action, (r_action, next_s))] = action.items()
+		plt.plot(range(0, t+1), Q[(s, name_action)], color[p])
+		print('Graphs:', (s, name_action),'is in', color[p])
 		p += 1
 
 
-
-
-
-
-
-plt.savefig('CompDrSeek1')
+plt.savefig('LearnRewVal with CompDrSeek1')
 
 '''Draft'''
 
