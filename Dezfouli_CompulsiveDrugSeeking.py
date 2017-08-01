@@ -58,7 +58,7 @@ r = [R_c] + [None] * t
 r_c = [0] + [None] * t
 
 # Rbar : number, average reward Rbar at time t
-###Rbar = [r[0]] + [0] * t What is a starting-value of Rbar ?
+###Rbar = [r[0]] + [0] * t What is t0 value of Rbar ?
 Rbar = [0] * (t + 1)
 
 # S : dict{'state s':list[dict{action a : tuple(reward r, next_s)}
@@ -106,6 +106,15 @@ rho = [None] * (t + 1)
 
 # kappa : list[number]
 kappa = [0] + [None] * t
+
+# PLcount : int, increments each time the agent chooses the action 'PL'
+PLcount = [0]
+
+# s_0count : int, increments each time the agent visits the state s_0
+s_0count = [1]
+
+# PLfreq : float, computes the probability of pressing th lever (PL)
+PLfreq = [0.5]
 
 
 
@@ -198,7 +207,6 @@ for i in range(0, t):
 						Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]
 
 
-
 	else: # s_t[i] == 's_1'
 		for s, list_action in S.items():
 			if s == s_t[i]:
@@ -218,6 +226,26 @@ for i in range(0, t):
 					Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]
 
 
+	#computation of PL probability
+	#if PLcount[i] is int and s_0count[i] is int:
+	if S_ge == 's_0':
+		s_0count.append(s_0count[i] + 1)
+
+		if A_ge == 'PL':
+			PLcount.append(PLcount[i] + 1)
+
+		else:
+			PLcount.append(PLcount[i])
+
+	else :
+		PLcount.append(PLcount[i])
+		s_0count.append(s_0count[i])
+
+	if i != 0:
+		PLfreq.append(float(PLcount[i - 1]) / float(s_0count[i - 1]))
+
+
+
 	#Updating V
 	SubV = list()
 	for s, list_action in S.items():
@@ -227,7 +255,6 @@ for i in range(0, t):
 				SubV.append(Q[(s, name_action)][i])
 	V[i] = max(SubV)
 
-	###change action.values()[0] with name_action, r_action, next_s = action.items()
 
 	#eq. 2.8 // eq. 2.9 not written, simplified version of eq 2.8
 	kappa[i + 1] = (1 - lambd) * kappa[i] + lambd * N
@@ -254,6 +281,8 @@ for i in range(0, t):
 		Rbar[i + 1] = Rbar[i]
 
 
+
+
 print('Q[S_ge, A_ge][i] = ', Q[S_ge, A_ge][i])
 print('r[i] =', r[i], 'Ds =', Ds, 'kappa[i] =', kappa[i], 'Rbar[i] =', Rbar[i], 'rho[i]', rho[i])
 
@@ -262,10 +291,14 @@ for s, list_action in S.items():
 		[(name_action, (r_action, next_s))] = action.items()
 		print ('Q[', s, name_action,'] = ', Q[(s, name_action)])
 
+print('PLcount =', PLcount)
+print('S_0count =', s_0count)
+print('PLfreq =', PLfreq)
+
+
 '''Graphs'''
 
-p = 0
-ax = list()
+'''p = 0
 color = ['r-', 'k-', 'b-', 'g-']
 for s, list_action in S.items():
 	for action in list_action:
@@ -273,56 +306,8 @@ for s, list_action in S.items():
 		plt.plot(range(0, t+1), Q[(s, name_action)], color[p])
 		print('Graphs:', (s, name_action),'is in', color[p])
 		p += 1
+plt.savefig('Write the name of the graph')'''
 
 
-plt.savefig('LearnRewVal with CompDrSeek1')
-
-'''Draft'''
-
-'''r = [0] * 2000
-Rbar= [0] * (len(r) + 1)
-S = S_0 = [('PL', R, 1)]
-V = [0 for s in S]
-Q = {(s, a) : 0 for a, r, next_s in s for s in S}
-
-R_ = 0 #???'''
-
-'''#ax=plt.subplot(0, 1000, 2000)
-plt.plot(r, range(0, t))
-#plt.plot(r)
-plt.ylim(0, 500)
-plt.ylabel('Value')
-plt.xlabel('Number of received rewards drug intake value')
-
-ax=plt.subplot(R, range(0, t))
-plt.plot(R[t])
-ax.set_ylim(0, 100, 200, 300, 400, 500)
-ax.set_ylabel("R")
-
-ax=plt.subplot(r, range5,3,10)
-plt.plot(NAc_record[trial_num-1])
-ax.set_ylim(-0.3,2)
-ax.set_ylabel("VS")'''
-
-'''# Q : dict{tuple(state, action): value of reward}
-# s, a : str^2, list_action : list[tuple], r : float, next_s : number
-for s, list_action in S.items():
-	for action in list_action:
-		a, r, next_s = action
-		Q[(s, a)] = r
-
-list_action = [] ###tries of defining Q with one line
-Q_ = {(s, a) : r for (a, r, next_s) in list_action for (s, (list_action)) in S.items()}
-print()
-print(Q_)
-Q = {(s, a): r for (a, r, next_s) in s for s in S}'''
-
-
-'''
-# Q : dict{[tuple(state, action): value of reward}
-Q = dict()
-for s, list_action in S.items():
-	for action in list_action:
-		a, r_of_a = action
-		Q[(s, a)] = r_of_a
-'''
+plt.plot(s_0count[:-1], PLfreq)
+plt.savefig('PLfreq1')
