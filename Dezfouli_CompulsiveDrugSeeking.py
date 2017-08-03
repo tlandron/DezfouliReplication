@@ -1,4 +1,3 @@
-from dana import *
 import numpy as np
 import matplotlib.pyplot as plt
 import random
@@ -77,6 +76,9 @@ S = {
 # list[str] : list of the state really taken
 s_t = ['s_0'] + [None] * t
 
+# list[str] : list of the action really performed
+a_t = [None] * (t + 1)
+
 # delta : list[float], RPE
 delta = [None] * (t + 1)
 
@@ -117,11 +119,71 @@ s_0count = [1]
 PLfreq = [0.5]
 
 
+'''Functions'''
+
+"""
+"""
+
+
+def attribute_values(Arg_name_action, Arg_r_action, Arg_next_s):
+	"""
+	Attributes the values action, r_action and next_s after the action has been chosen
+	"""
+	a_t[i] = Arg_name_action
+	r[i] = Arg_r_action
+	s_t[i + 1] = Arg_next_s
+
+
+
+def ifnot_statecondition(current_state, wanted_state, Q, list_action):
+	"""
+	Enables the continuty of the each state-acion value when it is not selected by the agent and consequently no updated
+	"""
+	if not current_state == wanted_state: #assigns the i + 1 value of the other actions of the other states ('other-state, other-actions' value)
+		for action in list_action:
+			[(name_action, (r_action, next_s))] = action.items()
+			Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]
+
+def chosen_action(Arg_list_action, Arg_name_action):
+	"""
+	Return the chosen_action in the case of exploratory action in state s_0
+	"""
+	if non-explo == False:
+		chosen_action = random.choice(Arg_list_action)
+		action_condition = Arg_name_action == chosen_action
+
+
+def read_and_do(todo = attribute_values, state_condition = 's == s_t[i]', S_type_dict = S, Q = Q, Arg_temp_action = None, action_condition = 'True', non_explo = True):
+	""" """
+	for s, list_action in S_type_dict.items():
+		if eval(state_condition):
+			if non_explo == False:
+				chosen_action = random.choice(list_action)
+				[(name_chosen_action, (r_chosen_action, next_s_chosen_action))] = chosen_action.items()
+				action_condition = 'name_action == name_chosen_action'
+
+			for action in list_action:
+				[(name_action, (r_action, next_s))] = action.items()
+
+				if eval(action_condition): #(action == chosen_action:
+					todo(name_action, r_action, next_s)
+
+				if not eval(action_condition): #assigns the i + 1 value of the other actions of the same state ('same-state, other-actions' value)
+					Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]
+
+		if not eval(state_condition): #assigns the i + 1 value of the other actions of the other states ('other-state, other-actions' value)
+			for action in list_action:
+				[(name_action, (r_action, next_s))] = action.items()
+				Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]
+
+
+
+
 
 '''Equations'''
 
 for i in range(0, t):
-
+	print('step, i =', i)
 	###Setting a new value to the cocaine reward (following the normal distribution previously defined)
 	# R_ : float
 	R_N = rndGenerator.normal(mu_N, sigma_N**2) #reward of a natural reinforcer
@@ -135,7 +197,6 @@ for i in range(0, t):
 
 
 	if s_t[i] == 's_0':		###epsilon-greedy action selection policy
-
 		# temp : float, is part of the epsilon-greedy action selectione (temps = the value that epsilon is compared to)
 		temp = random.random()
 
@@ -147,103 +208,37 @@ for i in range(0, t):
 			# temp_dict : dict(), stores the action subdictionaries of the current states for computation a the maximun state-action value
 			temp_dict = dict()
 
-
 			for s, list_action in S.items():
 				if s == s_t[i]:
 					for action in list_action:
 						[(name_action, (r_action, next_s))] = action.items()
 						temp_dict[name_action] = Q[(s_t[i], name_action)][i]
 
-
 			temp_action = max(temp_dict, key = temp_dict.get) # return the name of the action with the maximun state-action value
 
-
-			for s, list_action in S.items():
-				if s == s_t[i]:
-					for action in list_action:
-						[(name_action, (r_action, next_s))] = action.items()
-						if name_action == temp_action:
-							r[i] = r_action
-							s_t[i + 1] = next_s
-
-							S_ge = s
-							A_ge = name_action
-
-
-						if not name_action == temp_action: #assigns the i + 1 value of the other actions within the same state ('same-state, other-actions' value)
-							Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]
-
-
-				if not s == s_t[i]: #assigns the i + 1 value of the other actions of the other states ('other-state, other-actions' value)
-					for action in list_action:
-						[(name_action, (r_action, next_s))] = action.items()
-						Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]
+			read_and_do(state_condition = 's == s_t[i]', Arg_temp_action = temp_action, action_condition = 'name_action == temp_action')
 
 
 		else: #choose the action randomly (exploratory action)
 
 			non_explo = False #(exploratory action)
 
-			for s, list_action in S.items():
-				if s == s_t[i]:
-					chosen_action = random.choice(list_action)
-					[(name_action, (r_action, next_s))] = chosen_action.items()
-
-					r[i] = r_action
-					s_t[i + 1] = next_s
-
-					S_ge = s
-					A_ge = name_action
-
-
-					for action in list_action:
-						if not action == chosen_action:
-							[(name_action, (r_action, next_s))] = action.items()
-							Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]
-
-				if not s == s_t[i]:
-					for action in list_action:
-						[(name_action, (r_action, next_s))] = action.items()
-						Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]
-
+			read_and_do(non_explo = False)
 
 	else: # s_t[i] == 's_1'
-		for s, list_action in S.items():
-			if s == s_t[i]:
-				for action in list_action:
-					[(name_action, (r_action, next_s))] = action.items()
-
-					r[i] = r_action
-					s_t[i + 1] = next_s
-
-					S_ge = s
-					A_ge = name_action
-
-
-			if not s == s_t[i]:
-				for action in list_action:
-					[(name_action, (r_action, next_s))] = action.items()
-					Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]
+		read_and_do()
 
 
 	#computation of PL probability
 	#if PLcount[i] is int and s_0count[i] is int:
-	if S_ge == 's_0':
-		s_0count.append(s_0count[i] + 1)
-
-		if A_ge == 'PL':
-			PLcount.append(PLcount[i] + 1)
-
-		else:
-			PLcount.append(PLcount[i])
-
-	else :
-		PLcount.append(PLcount[i])
-		s_0count.append(s_0count[i])
 
 	if i != 0:
-		PLfreq.append(float(PLcount[i - 1]) / float(s_0count[i - 1]))
+		if s_t[i] == 's_0':
+			s_0count.append(1)
+	if a_t[i] == 'PL':
+		PLcount.append(1)
 
+	PLfreq.append(float(sum(PLcount))/float(sum(s_0count)))
 
 
 	#Updating V
@@ -263,16 +258,16 @@ for i in range(0, t):
 	rho[i] = Rbar[i] + kappa[i]
 
 	#eq. 2.10 ###Under cocaine
-	delta_c[i] = max((r[i] + V[i] - Q[S_ge, A_ge][i] + (Ds - kappa[i])), (Ds - kappa[i])) - Rbar[i]
+	delta_c[i] = max((r[i] + V[i] - Q[(s_t[i], a_t[i])][i] + (Ds - kappa[i])), (Ds - kappa[i])) - Rbar[i]
 
 	#eq. 1.3 : Q(s_t, a_t) <- Q(st, at) + alpha * delta_t
-	Q[S_ge, A_ge][i + 1] = Q[S_ge, A_ge][i] + delta_c[i] * alpha
+	Q[s_t[i], a_t[i]][i + 1] = Q[s_t[i], a_t[i]][i] + delta_c[i] * alpha
 
 	#eq. 2.3
-	#delta[i] = r[i] + V[i] - Q[S_ge, A_ge][i] - rho[i]
+	delta[i] = r[i] + V[i] - Q[s_t[i], a_t[i]][i] - rho[i]
 
 	#eq. 2.6
-	r_c[i] = delta_c[i] - V[i] + Q[S_ge, A_ge][i] + rho[i]
+	r_c[i] = delta_c[i] - V[i] + Q[s_t[i], a_t[i]][i] + rho[i]
 
 	#eq. 2.2
 	if non_explo:
@@ -283,7 +278,7 @@ for i in range(0, t):
 
 
 
-print('Q[S_ge, A_ge][i] = ', Q[S_ge, A_ge][i])
+print('Q[s_t[i], a_t[i]][i] = ', Q[s_t[i], a_t[i]][i])
 print('r[i] =', r[i], 'Ds =', Ds, 'kappa[i] =', kappa[i], 'Rbar[i] =', Rbar[i], 'rho[i]', rho[i])
 
 for s, list_action in S.items():
@@ -306,8 +301,13 @@ for s, list_action in S.items():
 		plt.plot(range(0, t+1), Q[(s, name_action)], color[p])
 		print('Graphs:', (s, name_action),'is in', color[p])
 		p += 1
-plt.savefig('Write the name of the graph')'''
+plt.savefig('Write the name of the graph')
 
 
 plt.plot(s_0count[:-1], PLfreq)
-plt.savefig('PLfreq1')
+plt.savefig('PLfreq1')'''
+
+""": #assigns the i + 1 value of the other actions of the other states ('other-state, other-actions' value)
+for action in list_action:
+[(name_action, (r_action, next_s))] = action.items()
+Q[(s, name_action)][i + 1] = Q[(s, name_action)][i]"""
