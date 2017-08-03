@@ -153,9 +153,21 @@ def chosen_action(Arg_list_action, Arg_name_action):
 		action_condition = Arg_name_action == chosen_action
 
 
+def check(eval_condtion):
+	"""
+	Makes sure the eval_condtion argument is a boolean in a string ('bool')
+	"""
+	if type(eval_condtion) != str or type(eval(eval_condtion)) != bool:
+		return('Error: state_condition and action_condition must be a boolean variable written as a string variable "bool"!')
+
+
+
 def read_and_do(todo = attribute_values, state_condition = 's == s_t[i]', S_type_dict = S, Q = Q, Arg_temp_action = None, action_condition = 'True', non_explo = True):
-	""" """
+	"""
+	Main function : read the dictionary, enables the action choice computation and attributes the right values thanks to attribute_values().
+	"""
 	for s, list_action in S_type_dict.items():
+		check(state_condition)
 		if eval(state_condition):
 			if non_explo == False:
 				chosen_action = random.choice(list_action)
@@ -165,6 +177,7 @@ def read_and_do(todo = attribute_values, state_condition = 's == s_t[i]', S_type
 			for action in list_action:
 				[(name_action, (r_action, next_s))] = action.items()
 
+				check(action_condition)
 				if eval(action_condition): #(action == chosen_action:
 					todo(name_action, r_action, next_s)
 
