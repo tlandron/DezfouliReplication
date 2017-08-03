@@ -109,7 +109,7 @@ class Model:
     def compute_action_and_next_state(self, s):
         """Choose the next action using the epsilon-greedy algorithm, and derive the next state."""
 
-        if len(self.S[s]) >= 2 and random.random() < epsi:  # QUESTION: is the len(self.S[s_t]) >= 2 correct?
+        if len(self.S[s]) >= 2 and random.random() < self.epsi:  # QUESTION: is the len(self.S[s_t]) >= 2 correct?
             exploratory = True
             chosen_action = random.choice(self.S[s])
         else:
