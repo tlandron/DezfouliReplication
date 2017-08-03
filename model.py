@@ -24,10 +24,10 @@ class History:
 
 
     def update_Q(self, s_t, a_t):
-        self.Q_history[(s_t, a_t)] = (self.model.t, self.model.Q[(s_t, a_t)])
+        self.Q_history[(s_t, a_t)].append((self.model.t, self.model.Q[(s_t, a_t)]))
 
     def update_V(self, s_t, V):
-        self.V_history[s_t] = (self.model.t, V)
+        self.V_history[s_t].append((self.model.t, V))
 
     def compute_PLfreq(self):
         if i != 0:
